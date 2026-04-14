@@ -166,6 +166,7 @@
   <button class="tab-btn active" onclick="showTab('notas',this)">📦 NOTAS</button>
   <button class="tab-btn" onclick="showTab('abonos',this)">💵 ABONOS</button>
   <button class="tab-btn" onclick="showTab('fijos',this)">📋 FIJOS</button>
+  <button class="tab-btn" onclick="showTab('corrientes',this)">🛒 CORRIENTES</button>
   <button class="tab-btn" onclick="showTab('cuentas',this)">📊 CUENTAS</button>
   <button class="tab-btn" onclick="showTab('log',this)">🗂 REGISTROS</button>
 </nav>
@@ -232,6 +233,18 @@
     <button class="btn-guardar" onclick="guardarFijos()">💾 GUARDAR GASTOS</button>
   </div>
 
+  <!-- ══ CORRIENTES ══ -->
+  <div class="sec" id="sec-corrientes">
+    <div class="sh"><div class="sh-title">GASTOS CORRIENTES</div><div class="sh-sub">BEBIDAS · DESAYUNO · FARMACIA · FERRETERÍA · VARIOS</div></div>
+    <div class="card">
+      <div class="card-lbl">📅 FECHA</div>
+      <div class="fg"><label>Fecha</label><input type="date" id="co-fecha"></div>
+    </div>
+    <div id="items-corriente"></div>
+    <button class="btn-add" onclick="addItemCorriente()">＋ AGREGAR GASTO</button>
+    <button class="btn-guardar" onclick="guardarCorrientes()">💾 GUARDAR GASTOS</button>
+  </div>
+
   <!-- ══ CUENTAS ══ -->
   <div class="sec" id="sec-cuentas">
     <div class="sh"><div class="sh-title">CUENTAS POR PAGAR</div><div class="sh-sub">NOTAS EN CRÉDITO Y ABONADAS</div></div>
@@ -247,6 +260,7 @@
         <select id="fl-tipo" onchange="renderLog()">
           <option value="">TODOS</option><option value="NOTA">NOTA</option>
           <option value="ABONO">ABONO</option><option value="GASTO FIJO">GASTO FIJO</option>
+          <option value="GASTO CORRIENTE">GASTO CORRIENTE</option>
         </select>
       </div>
       <div class="fg" style="margin:0"><label>Estatus</label>
@@ -284,38 +298,55 @@
 //  CATÁLOGOS
 // ══════════════════════════════════════════
 const CAT_COMPRA = {
+  "AGUA PINO SUAREZ":   ["GARRAFON AGUA"],
   "BACHOCO":            ["FILETE CERDO","INNER BACHOCO"],
-  "CARNES ALFA":        ["CABEZA CERDO","CHAMORRO","FILETE CERDO","HUESO","INNER BACHOCO","INNER IBP","LENGUA CERDO","LENGUA DE RES","PECHUGA AURORA"],
+  "CARBON ENSINO":      ["CARBON"],
+  "CARNES ALFA":        ["CABEZA CERDO","CHAMORRO","ESPINAZO","FILETE CERDO","HUESO","INNER BACHOCO","INNER IBP","LENGUA CERDO","LENGUA DE RES","PECHUGA AURORA"],
   "CARNES GOMEZ":       ["COSTILLA CORTADA","FILETE CERDO","PECHUGA AURORA","PIERNA","REBANADO"],
   "CARNES JILO":        ["INNER VARIOS","PIERNA"],
-  "CARNES LEYVA":       ["CANAL DE RES","COSTILLA CON LOMO","COSTILLA SIN LOMO","ESPINAZO","LOMO","PEINECILLO C/H","PEINECILLO S/H","PIERNA","PULPA RES","REBANADO"],
+  "CARNES LEYVA":       ["CANAL DE RES","COSTILLA CON LOMO","COSTILLA SIN LOMO","ESPINAZO","LOMO","MANITAS","PEINECILLO C/H","PEINECILLO S/H","PIERNA","PULPA RES","REBANADO"],
   "CHICHARRON GERARDO": ["CHICHARRON BOLSA","CHICHARRON GRANEL"],
+  "CONDIMENTOS GABRIEL":["CONDIMENTOS"],
   "DESECHABLES N":      ["BOLSA CAMISA","BOLSA ROLLO","EMPLAYE","ROLLO GRANDE"],
   "EL JALICIENSE":      ["PEINECILLO C/H","PEINECILLO S/H","PIERNA","PULPA RES"],
   "EMBUTIDOS GOMEZ":    ["CHULETA AHUMADA","TOCINO PIERNA"],
+  "FAPBSA":             ["CONDIMENTOS"],
+  "HIGADO OSWALDO":     ["HIGADO"],
   "LEAVIC":             ["CANAL CERDO ESPECIAL","CHORIZO AZAR","DESPIQUE","LENGUA CERDO"],
   "MANTEQUERA DANY":    ["CHICHARRON PRENSADO","MANTECA"],
-  "OBRADOR VAZQUEZ":    ["COSTILLA CON LOMO","COSTILLA SIN LOMO","ESPALDA","ESPINAZO","HUACAL","LOMO","MANTECA","PIERNA"],
+  "OBRADOR VAZQUEZ":    ["CABEZA CERDO","COSTILLA CON LOMO","COSTILLA SIN LOMO","ESPALDA","ESPINAZO","HUACAL","LOMO","MANITAS","MANTECA","PEINECILLO","PIERNA","TOCINO"],
   "POLLO DE ORO":       ["PECHUGA AURORA","PIERNA Y MUSLO","VARIOS"],
   "SERVICARNES":        ["CHAMBERETE","FILETE CERDO","INNER VARIOS","PIERNA"],
+  "VERDURA":            ["FRUTAS Y VERDURAS"],
 };
 const CAT_FIJO = {
-  "CFE":            ["LUZ"],
-  "TELMEX":         ["INTERNET"],
-  "INMUEBLES IMPI": ["RENTA"],
-  "ALCALDE":        ["NOMINA"],
-  "GASTOS VARIOS":  ["AGUA FRESCA","AGUA/REFRESCO","CAFÉ/TE","DESAYUNO","FERRETERIA","GASTOS DAVID","MEDICINA","PAPELERIA"],
+  "ALCALDE":            ["NOMINA"],
+  "CFE":                ["LUZ"],
+  "GASOLINA":           ["GASOLINA"],
+  "INMUEBLES IMPI":     ["RENTA"],
+  "TELMEX":             ["INTERNET"],
+};
+const CAT_CORRIENTE = {
+  "BEBIDAS":            ["AGUA FRESCA / REFRESCOS / CAFÉ"],
+  "DESAYUNO":           ["GASTOS DE ALIMENTACION"],
+  "FARMACIA":           ["MEDICINA"],
+  "FERRETERIA":         ["FERRETERIA / MATERIALES"],
+  "GASTOS VARIOS":      ["GASTOS DAVID"],
+  "PAPELERIA":          ["PAPELERIA"],
+  "PRODUCTOS DE LIMPIEZA": ["GENERAL"],
+  "VERDURA":            ["FRUTAS Y VERDURAS"],
 };
 
 // ══════════════════════════════════════════
 //  ESTADO
 // ══════════════════════════════════════════
-let notas  = JSON.parse(localStorage.getItem('prim_notas')  || '[]');
-let abonos = JSON.parse(localStorage.getItem('prim_abonos') || '[]');
-let fijos  = JSON.parse(localStorage.getItem('prim_fijos')  || '[]');
+let notas      = JSON.parse(localStorage.getItem('prim_notas')      || '[]');
+let abonos     = JSON.parse(localStorage.getItem('prim_abonos')     || '[]');
+let fijos      = JSON.parse(localStorage.getItem('prim_fijos')      || '[]');
+let corrientes = JSON.parse(localStorage.getItem('prim_corrientes') || '[]');
 let estActual  = 'LIQUIDADA';
 let pendLiq    = null;
-let nidx = 0, fidx = 0;
+let nidx = 0, fidx = 0, coidx = 0;
 
 // ══════════════════════════════════════════
 //  INIT
@@ -326,8 +357,9 @@ function init() {
   document.getElementById('hfecha').innerHTML =
     `${now.toLocaleDateString('es-MX',{weekday:'short'}).toUpperCase()}<br>
      ${now.toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'})}`;
-  document.getElementById('n-fecha').value = hoy;
-  document.getElementById('f-fecha').value = hoy;
+  document.getElementById('n-fecha').value  = hoy;
+  document.getElementById('f-fecha').value  = hoy;
+  document.getElementById('co-fecha').value = hoy;
   document.getElementById('fl-fecha').value = hoy;
 
   const sel = document.getElementById('n-prov');
@@ -473,9 +505,10 @@ function guardarNota() {
   document.getElementById('items-nota').innerHTML = '';
   document.getElementById('totalNota').textContent = '$0.00';
   nidx = 0;
+  const estatusGuardado = nuevaNota.estatus;
   setEst('LIQUIDADA');
   addItemNota();
-  toast(`✔ Nota ${folio} guardada — ${estActual}`);
+  toast(`✔ Nota ${folio} guardada — ${estatusGuardado}`);
 }
 
 // ══════════════════════════════════════════
@@ -717,9 +750,10 @@ function renderLog() {
   const fe = document.getElementById('fl-est').value;
 
   let todos = [
-    ...notas.map(n  => ({...n,  _tipo:'NOTA',       fecha:n.fecha})),
-    ...abonos.map(a => ({...a,  _tipo:'ABONO',      fecha:a.fecha})),
-    ...fijos.map(f  => ({...f,  _tipo:'GASTO FIJO', fecha:f.fecha})),
+    ...notas.map(n      => ({...n,  _tipo:'NOTA',             fecha:n.fecha})),
+    ...abonos.map(a     => ({...a,  _tipo:'ABONO',            fecha:a.fecha})),
+    ...fijos.map(f      => ({...f,  _tipo:'GASTO FIJO',       fecha:f.fecha})),
+    ...corrientes.map(c => ({...c,  _tipo:'GASTO CORRIENTE',  fecha:c.fecha})),
   ].sort((a,b) => (b.ts||'').localeCompare(a.ts||''));
 
   if (ff) todos = todos.filter(r => r.fecha === ff);
@@ -754,6 +788,16 @@ function renderLog() {
         <div class="log-det">${r.txt||'—'}</div>
         <div class="log-foot"><div class="log-montos">Abono: <span style="color:#66BB6A">$${fmt(r.monto)}</span></div></div>
       </div>`;
+    } else if (r._tipo === 'GASTO CORRIENTE') {
+      html += `<div class="log-item" style="border-left:3px solid #29B6F6">
+        <div class="log-head"><span class="log-folio">🛒 GASTO CORRIENTE</span><span class="log-fecha">${fmtF(r.fecha)}</span></div>
+        <div class="log-prov">${r.prov}</div>
+        <div class="log-det">${r.concepto||'—'}${r.notas?' · '+r.notas:''}</div>
+        <div class="log-foot">
+          <div class="log-montos">$<span style="color:var(--amarillo)">${fmt(r.monto)}</span></div>
+          <button class="log-del" onclick="delCorriente(${r.id})">🗑</button>
+        </div>
+      </div>`;
     } else {
       html += `<div class="log-item" style="border-left:3px solid var(--amarillo)">
         <div class="log-head"><span class="log-folio">📋 GASTO FIJO</span><span class="log-fecha">${fmtF(r.fecha)}</span></div>
@@ -782,6 +826,12 @@ function delFijo(id) {
   saveAll(); renderLog();
   toast('🗑 Gasto eliminado','#555');
 }
+function delCorriente(id) {
+  if (!confirm('¿Eliminar este gasto?')) return;
+  corrientes = corrientes.filter(c => c.id !== id);
+  saveAll(); renderLog();
+  toast('🗑 Gasto eliminado','#555');
+}
 
 // ══════════════════════════════════════════
 //  GOOGLE SHEETS
@@ -802,12 +852,78 @@ async function enviarSheets(payload) {
 }
 
 // ══════════════════════════════════════════
+//  GASTOS CORRIENTES
+// ══════════════════════════════════════════
+function addItemCorriente() {
+  const id  = coidx++;
+  const num = document.querySelectorAll('[id^="coitem-"]').length + 1;
+  let provOpts = '<option value="">— Concepto —</option>';
+  Object.keys(CAT_CORRIENTE).sort().forEach(p => provOpts += `<option value="${p}">${p}</option>`);
+
+  const div = document.createElement('div');
+  div.className = 'item-row'; div.id = `coitem-${id}`;
+  div.innerHTML = `
+    <div class="item-head">
+      <span class="item-num">GASTO ${num}</span>
+      <button class="btn-rem" onclick="document.getElementById('coitem-${id}').remove()">✕</button>
+    </div>
+    <div class="g2">
+      <div class="fg"><label>Concepto</label>
+        <select id="coprov-${id}" onchange="updCorriente(${id})">${provOpts}</select>
+      </div>
+      <div class="fg" id="codet-w-${id}">
+        <label>Detalle</label>
+        <select id="codet-${id}"><option value="">— selecciona —</option></select>
+      </div>
+    </div>
+    <div class="g2">
+      <div class="fg"><label>Monto ($)</label><input type="number" id="comonto-${id}" placeholder="0.00" min="0" step="0.01"></div>
+      <div class="fg"><label>Notas</label><input type="text" id="conotas-${id}" placeholder="Opcional..."></div>
+    </div>`;
+  document.getElementById('items-corriente').appendChild(div);
+}
+
+function updCorriente(id) {
+  const prov  = document.getElementById(`coprov-${id}`)?.value;
+  const dets  = CAT_CORRIENTE[prov] || [];
+  const sel   = document.getElementById(`codet-${id}`);
+  sel.innerHTML = '<option value="">— Detalle —</option>';
+  dets.forEach(p => sel.innerHTML += `<option value="${p}">${p}</option>`);
+}
+
+function guardarCorrientes() {
+  const fecha = document.getElementById('co-fecha').value;
+  if (!fecha) return toast('⚠ Selecciona una fecha','#c62828');
+  const rows = document.querySelectorAll('[id^="coitem-"]');
+  if (!rows.length) return toast('⚠ Agrega al menos un gasto','#c62828');
+  let count = 0;
+  rows.forEach(row => {
+    const id    = row.id.replace('coitem-','');
+    const prov  = document.getElementById(`coprov-${id}`)?.value;
+    const det   = document.getElementById(`codet-${id}`)?.value || '';
+    const monto = parseFloat(document.getElementById(`comonto-${id}`)?.value) || 0;
+    const notas = document.getElementById(`conotas-${id}`)?.value || '';
+    if (!prov || !monto) return;
+    const nuevo = { id: Date.now() + Math.random(), fecha, prov, concepto: det, monto, notas, ts: new Date().toISOString() };
+    corrientes.push(nuevo);
+    enviarSheets({ tipo: 'GASTO_CORRIENTE', ...nuevo });
+    count++;
+  });
+  if (!count) return toast('⚠ Completa concepto y monto','#c62828');
+  saveAll();
+  document.getElementById('items-corriente').innerHTML = '';
+  coidx = 0;
+  toast(`✔ ${count} gasto(s) guardado(s)`);
+}
+
+// ══════════════════════════════════════════
 //  UTILS
 // ══════════════════════════════════════════
 function saveAll() {
-  localStorage.setItem('prim_notas',  JSON.stringify(notas));
-  localStorage.setItem('prim_abonos', JSON.stringify(abonos));
-  localStorage.setItem('prim_fijos',  JSON.stringify(fijos));
+  localStorage.setItem('prim_notas',      JSON.stringify(notas));
+  localStorage.setItem('prim_abonos',     JSON.stringify(abonos));
+  localStorage.setItem('prim_fijos',      JSON.stringify(fijos));
+  localStorage.setItem('prim_corrientes', JSON.stringify(corrientes));
 }
 function fmt(n) {
   return (parseFloat(n)||0).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2});
