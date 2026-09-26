@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sincronizar respaldo — Gastos Primavera</title>
+<style>
+  body { font-family: -apple-system, sans-serif; max-width: 480px; margin: 0 auto; padding: 20px; background:#f4f4f4; color:#222; }
+  h1 { font-size: 20px; }
+  .card { background:#fff; border-radius:10px; padding:16px; margin-bottom:14px; box-shadow:0 1px 3px rgba(0,0,0,.1); }
+  .row { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #eee; }
+  .row:last-child { border-bottom:none; }
+  label { display:block; margin:6px 0 4px; font-size:14px; color:#555; }
+  input[type=date] { width:100%; padding:8px; border:1px solid #ccc; border-radius:6px; font-size:16px; }
+  button { width:100%; padding:14px; font-size:16px; border:none; border-radius:8px; margin-top:8px; }
+  #btn-contar { background:#e0e0e0; color:#222; }
+  #btn-enviar { background:#2E7D32; color:#fff; }
+  #btn-enviar:disabled { background:#a5d6a7; }
+  .msg { font-size:14px; margin-top:10px; padding:10px; border-radius:6px; }
+  .ok { background:#e8f5e9; color:#2E7D32; }
+  .warn { background:#fff3e0; color:#e65100; }
+</style>
+</head>
+<body>
+  <h1>🔄 Respaldo a Sheets</h1>
+  <div class="card">
+    <label>Solo capturas a partir de:</label>
+    <input type="date" id="fecha-corte" value="2026-06-01">
+    <button id="btn-contar" onclick="contar()">1. Contar registros</button>
+  </div>
+
+  <div class="card" id="resumen" style="display:none;">
+    <div class="row"><span>Notas</span><strong id="c-notas">0</strong></div>
+    <div class="row"><span>Abonos</span><strong id="c-abonos">0</strong></div>
+    <div class="row"><span>Gastos fijos</span><strong id="c-fijos">0</strong></div>
+    <div class="row"><span>Gastos corrientes</span><strong id="c-corrientes">0</strong></div>
+    <button id="btn-enviar" onclick="enviar()">2. Enviar todo a Sheets</button>
+    <div id="msg"></div>
+  </div>
+
+<script>
+const GS_URL = 'https://script.google.com/macros/s/AKfycbzfEXe103X0RLzN4enWA1zeN6N_T9iaXQT9lgjGZew_A8QlBTKsenbgUFNph7C_eM6K/exec';
+
+function leer(clave) {
+  try { return JSON.parse(localStorage.getItem(clave) || '[]'); } catch { return []; }
+}
+
+function filtrar(arr, corte) {
+  return arr.filter(x => {
+    const f = (x.ts || x.fecha || '').slice(0, 10);
+    return f >= corte;
+  });
+}
+
+let paquete = null;
+
+function contar() {
+  const corte = document.getElementById('fecha-corte').value;
+  const notas      = filtrar(leer('prim_notas'), corte);
+  const abonos     = filtrar(leer('prim_abonos'), corte);
+  const fijos      = filtrar(leer('prim_fijos'), corte);
+  const corrientes = filtrar(leer('prim_corrientes'), corte);
+
+  paquete = { tipo: 'SYNC_MASIVO', notas, abonos, fijos, corrientes };
+
+  document.getElementById('c-notas').textContent = notas.length;
+  document.getElementById('c-abonos').textContent = abonos.length;
+  document.getElementById('c-fijos').textContent = fijos.length;
+  document.getElementById('c-corrientes').textContent = corrientes.length;
+  document.getElementById('resumen').style.display = 'block';
+  document.getElementById('msg').innerHTML = '';
+}
+
+async function enviar() {
+  if (!paquete) return;
+  const btn = document.getElementById('btn-enviar');
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+  try {
+    await fetch(GS_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(paquete)
+    });
+    document.getElementById('msg').innerHTML =
+      '<div class="msg ok">Enviado. Como el navegador no puede confirmar la respuesta, ve al Sheet y revisa que las filas nuevas aparecieron en cada pestaña.</div>';
+  } catch (err) {
+    document.getElementById('msg').innerHTML =
+      '<div class="msg warn">Error de red al enviar: ' + err.message + '</div>';
+  }
+  btn.textContent = '2. Enviar todo a Sheets';
+  btn.disabled = false;
+}
+</script>
+</body>
+</html>
